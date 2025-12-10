@@ -1,0 +1,27 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore logs
+*.log
+errors.txt
+
+# Ignore local config
+.streamlit/secrets.toml
+
+# Ignore environment
+.env
+venv/
+
+# Ignore IDE
+.vscode/
+.idea/
+
+# Ignore Mac files
+.DS_Store
+
+# Ignore confidential data (NDA protected)
+*.pdf
+*.xlsx
+*.xls
+*.csv

@@ -1,0 +1,3 @@
+Make sure to point out that the attributes are formatted inside curly braces ({}), code and attribute are divided by colon (:), and individual attributes are divided by the pipe (|). 
+
+Attribute names are capitalised as well. 
