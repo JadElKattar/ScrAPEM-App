@@ -172,10 +172,7 @@ with col2:
     """, unsafe_allow_html=True)
 
 with col3:
-    # Placeholder for Nikita
-    st.markdown("""
-    <div class="placeholder-avatar">👤</div>
-    """, unsafe_allow_html=True)
+    st.image("assets/team_nikita.png", use_container_width=True)
     st.markdown("""
     <div class="team-member-info">
         <p class="team-member-name">Nikita Marushko</p>
