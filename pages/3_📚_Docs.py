@@ -2,18 +2,20 @@
 ScrAPEM - Documentation Page
 """
 import streamlit as st
+from components.navbar import render_navbar
 
 st.set_page_config(
     page_title="Docs | ScrAPEM",
     page_icon="📚",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS
 st.markdown("""
 <style>
     .main .block-container {
-        padding-top: 2rem;
+        padding-top: 1rem;
     }
     
     .docs-header {
@@ -39,20 +41,28 @@ st.markdown("""
         border-radius: 8px;
         font-family: monospace;
     }
+    
+    /* Hide sidebar completely */
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Header with logo
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.image("assets/apem_logo.png", width=150)
-with col2:
-    st.markdown("""
-    <div class="docs-header">
-        <h1>📚 Documentation</h1>
-        <p>Learn how to use ScrAPEM effectively</p>
-    </div>
-    """, unsafe_allow_html=True)
+# Render header navbar
+render_navbar(current_page="Docs")
+
+# Docs Header
+st.markdown("""
+<div class="docs-header">
+    <h1>📚 Documentation</h1>
+    <p>Learn how to use ScrAPEM effectively</p>
+</div>
+""", unsafe_allow_html=True)
 
 # Quick Start
 st.markdown("## 🚀 Quick Start")
@@ -178,6 +188,6 @@ st.markdown("---")
 # Footer
 st.markdown("""
 <div style="text-align: center; color: #888;">
-    © 2025 ScrAPEM Intelligence | Powered by APEM
+    © 2025 ScrAPEM Intelligence | Built by Jad El Kattar, Alessandro Vigano, Nikita Marushko | Powered by APEM
 </div>
 """, unsafe_allow_html=True)

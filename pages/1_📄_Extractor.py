@@ -1,6 +1,6 @@
 """
 ScrAPEM - Intelligent Datasheet Extractor
-Hybrid AI + Deterministic Python Extraction Pipeline (v4.2)
+Hybrid AI + Deterministic Python Extraction Pipeline (v5.5)
 """
 
 import streamlit as st
@@ -13,6 +13,7 @@ from datetime import datetime
 from extract_ai import render_pdf_to_images, extract_with_ai, normalize_ai_output
 from extract_python import extract_from_buffer, get_low_confidence_fields, get_confidence_icon, PRODUCT_TYPES
 from merge_results import merge_product_data, format_for_output
+from components.navbar import render_navbar
 
 # --- CONFIGURATION ---
 # API keys should be entered via UI or stored in Streamlit secrets
@@ -139,12 +140,19 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
     }
+    
+    /* Hide default sidebar navigation */
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR ---
+# Render header navbar
+render_navbar(current_page="Extractor")
+
+# --- SIDEBAR (Configuration Only) ---
 with st.sidebar:
-    st.image("assets/apem_logo.png", width=150)
     st.markdown("### ⚙️ Configuration")
     st.markdown("---")
     
@@ -174,7 +182,7 @@ with st.sidebar:
 # --- MAIN CONTENT ---
 st.markdown("""
 <div class="main-header">
-    <h1>📄 ScrAPEM v5.3</h1>
+    <h1>📄 ScrAPEM v5.5</h1>
     <p>Intelligent Datasheet Extractor — Upload PDFs and extract product specifications automatically</p>
 </div>
 """, unsafe_allow_html=True)
@@ -442,6 +450,6 @@ if uploaded_files:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #888; font-size: 0.85rem;">
-    © 2025 ScrAPEM Intelligence. All rights reserved.
+    © 2025 ScrAPEM Intelligence | Built by Jad El Kattar, Alessandro Vigano, Nikita Marushko | Powered by APEM
 </div>
 """, unsafe_allow_html=True)

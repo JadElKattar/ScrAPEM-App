@@ -2,18 +2,20 @@
 ScrAPEM - About Page
 """
 import streamlit as st
+from components.navbar import render_navbar
 
 st.set_page_config(
     page_title="About | ScrAPEM",
     page_icon="ℹ️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS
 st.markdown("""
 <style>
     .main .block-container {
-        padding-top: 2rem;
+        padding-top: 1rem;
     }
     
     .about-header {
@@ -44,20 +46,28 @@ st.markdown("""
         border-radius: 12px;
         text-align: center;
     }
+    
+    /* Hide sidebar completely */
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Header with logo
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.image("assets/apem_logo.png", width=150)
-with col2:
-    st.markdown("""
-    <div class="about-header">
-        <h1>ℹ️ About ScrAPEM</h1>
-        <p>AI-Powered Datasheet Extraction for APEM Product Documentation</p>
-    </div>
-    """, unsafe_allow_html=True)
+# Render header navbar
+render_navbar(current_page="About")
+
+# About Header
+st.markdown("""
+<div class="about-header">
+    <h1>ℹ️ About ScrAPEM</h1>
+    <p>AI-Powered Datasheet Extraction for APEM Product Documentation</p>
+</div>
+""", unsafe_allow_html=True)
 
 # About Section
 st.markdown("## 🏢 About APEM")
@@ -119,6 +129,6 @@ with col4:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #888;">
-    © 2025 ScrAPEM Intelligence | Powered by APEM
+    © 2025 ScrAPEM Intelligence | Built by Jad El Kattar, Alessandro Vigano, Nikita Marushko | Powered by APEM
 </div>
 """, unsafe_allow_html=True)
