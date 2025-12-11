@@ -16,7 +16,7 @@ def render_navbar(current_page="Home"):
     <style>
         /* Reduce top padding */
         .main .block-container {
-            padding-top: 0.5rem !important;
+            padding-top: 0.25rem !important;
         }
         
         /* Button styling for nav */
@@ -61,9 +61,6 @@ def render_navbar(current_page="Home"):
     col_logo, col_spacer, col_home, col_about, col_docs, col_extractor = st.columns([1.5, 2.5, 0.8, 0.8, 0.8, 1])
     
     with col_logo:
-        # Make logo clickable - redirect to home
-        if st.button("", key="logo_home", help="Go to Home"):
-            st.switch_page("app.py")
         st.image("assets/apem_logo.png", width=130)
     
     with col_home:
