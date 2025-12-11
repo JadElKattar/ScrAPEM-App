@@ -112,7 +112,7 @@ with st.sidebar:
 # Hero Section
 st.markdown("""
 <div class="hero-section">
-    <h1>📄 ScrAPEM v5.2</h1>
+    <h1>📄 ScrAPEM v5.3</h1>
     <p>AI-Powered Datasheet Extraction for APEM Products</p>
     <p style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">
         Extract technical specifications from PDF datasheets in seconds
@@ -165,7 +165,7 @@ st.markdown("")
 # CTA
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.page_link("pages/1_📄_Extractor.py", label="🚀 Start Extracting", icon="📄", use_container_width=True)
+    st.info("👈 **Select 'Extractor' from the sidebar to start extracting data from PDFs!**")
 
 st.markdown("---")
 

@@ -174,7 +174,7 @@ with st.sidebar:
 # --- MAIN CONTENT ---
 st.markdown("""
 <div class="main-header">
-    <h1>📄 ScrAPEM v5.2</h1>
+    <h1>📄 ScrAPEM v5.3</h1>
     <p>Intelligent Datasheet Extractor — Upload PDFs and extract product specifications automatically</p>
 </div>
 """, unsafe_allow_html=True)
