@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
 """
-ScrAPEM - Intelligent Datasheet Extractor (Final Version)
-Enhanced extraction logic with exhaustive search and standardized formatting.
+ScrAPEM Python Extraction Module
+Enhanced extraction logic with exhaustive search, multi-product support, and confidence tracking.
 """
 
-import streamlit as st
 import pdfplumber
-import pandas as pd
 import re
-import io
 from pathlib import Path
-import tempfile
-import os
-from openpyxl.styles import PatternFill, Font
 
 
 # =============================================================================
@@ -1399,503 +1393,90 @@ def parse_pdf(file_path, filename):
         }
 
 
-
-# =============================================================================
-# STREAMLIT APP - POLISHED UI/UX
-# =============================================================================
-
-def main():
-    # Page configuration
-    st.set_page_config(
-        page_title="ScrAPEM - Intelligent Datasheet Extractor",
-        page_icon="📄",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
+def extract_from_buffer(pdf_buffer, filename):
+    """
+    Extract data from a PDF file buffer (for Streamlit uploads).
     
-    # Custom CSS
-    st.markdown("""
-    <style>
-    .main .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 2rem;
-    }
-    
-    .main-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #4a90b8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
-    }
-    
-    .subtitle {
-        font-size: 1.1rem;
-        color: #5a6c7d;
-        margin-bottom: 1.5rem;
-    }
-    
-    .step-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, #2d5a87 0%, #4a90b8 100%);
-        color: white;
-        padding: 0.25rem 0.7rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-right: 0.5rem;
-    }
-    
-    .stButton > button {
-        background: linear-gradient(135deg, #2d5a87 0%, #4a90b8 100%);
-        color: white;
-        font-weight: 600;
-        padding: 0.6rem 1.5rem;
-        border: none;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-    }
-    
-    .stDownloadButton > button {
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-        color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
-        padding: 0.75rem 2rem;
-        border: none;
-        border-radius: 10px;
-    }
-    
-    .success-banner {
-        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-        border-left: 4px solid #059669;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
-    
-    .processing-status {
-        background: #f0f9ff;
-        border-left: 4px solid #2d5a87;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        margin: 0.5rem 0;
-        font-size: 0.95rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # ==========================================================================
-    # SIDEBAR WITH LOGO
-    # ==========================================================================
-    with st.sidebar:
-        # APEM Logo at top of sidebar
-        logo_path = Path(__file__).parent / "apem_logo.png"
-        if logo_path.exists():
-            st.image(str(logo_path), width=200)
+    Args:
+        pdf_buffer: File-like object (e.g., Streamlit UploadedFile)
+        filename: Original filename for series detection
+        
+    Returns:
+        dict with extracted data and confidence metadata
+    """
+    try:
+        pdf = pdfplumber.open(pdf_buffer)
+        
+        all_text = ""
+        all_tables = []
+        pages_text = []
+        
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                all_text += page_text + "\n"
+                pages_text.append(page_text)
+            else:
+                pages_text.append("")
+            tables = page.extract_tables()
+            if tables:
+                all_tables.extend(tables)
+        
+        pdf.close()
+        
+        # Detect product type
+        product_type = detect_product_type(all_text, filename)
+        
+        # Extract based on product type
+        if product_type == 'paddle_joystick':
+            result = extract_paddle_joystick_data(all_text, all_tables, filename)
+        elif product_type == 'thumbstick_joystick':
+            result = extract_thumbstick_data(all_text, all_tables, filename)
+        elif product_type == 'fingertip_joystick':
+            result = extract_fingertip_joystick_data(all_text, all_tables, filename)
+        elif product_type == 'terminal_block':
+            result = extract_terminal_block_data(all_text, all_tables, filename)
         else:
-            st.markdown("## 🏢 APEM")
+            result = extract_led_indicator_data(all_text, all_tables, filename)
         
-        st.markdown("---")
+        # Add validation metadata
+        validation = analyze_extraction_confidence(result, all_text, pages_text)
+        overall_score, overall_conf = calculate_overall_confidence(validation)
+        result['_validation'] = validation
+        result['_confidence_score'] = overall_score
+        result['_confidence_level'] = overall_conf
+        result['_raw_text'] = all_text  # Include for AI enhancement
+        result['_pages_text'] = pages_text
         
-        st.markdown("### 📋 About ScrAPEM")
-        st.markdown("""
-        Extracts technical specifications from PDF datasheets and exports to Excel.
+        return result
         
-        **Extracted Fields:**
-        - Series
-        - Mounting Hole
-        - Bezel Style
-        - Terminals
-        - Bezel Finish
-        - Illumination Type
-        - LED Color
-        - Voltage
-        - Sealing (IP Rating)
-        """)
-        
-        st.markdown("---")
-        st.markdown("### 📐 Output Format")
-        st.markdown("""
-        All values formatted as:
-        ```
-        {Code:Value|Code:Value}
-        ```
-        Example:
-        `{R:Red|G:Green|B:Blue}`
-        """)
-        
-        st.markdown("---")
-        st.caption("ScrAPEM v4.0 | Final Release")
-    
-    # ==========================================================================
-    # MAIN CONTENT
-    # ==========================================================================
-    
-    # Header
-    col_logo, col_title = st.columns([1, 5])
-    with col_title:
-        st.markdown('<h1 class="main-title">📄 ScrAPEM</h1>', unsafe_allow_html=True)
-        st.markdown(
-            '<p class="subtitle">Intelligent Datasheet Extractor — Extract technical specifications with exhaustive search</p>',
-            unsafe_allow_html=True
-        )
-    
-    # Step 1: Upload
-    st.markdown('<span class="step-badge">Step 1</span> **Upload PDF Datasheets**', unsafe_allow_html=True)
-    
-    uploaded_files = st.file_uploader(
-        "Drag and drop PDF files here, or click to browse",
-        type=['pdf'],
-        accept_multiple_files=True,
-        help="Upload one or more PDF product datasheets"
-    )
-    
-    if uploaded_files:
-        st.success(f"✅ {len(uploaded_files)} file(s) uploaded and ready")
-        with st.expander("📁 View uploaded files"):
-            for i, f in enumerate(uploaded_files, 1):
-                st.write(f"{i}. {f.name}")
-    
-    st.markdown("---")
-    
-    # Step 2: Process
-    st.markdown('<span class="step-badge">Step 2</span> **Run Extraction**', unsafe_allow_html=True)
-    
-    # Session state
-    if 'results_df' not in st.session_state:
-        st.session_state.results_df = None
-    if 'extraction_complete' not in st.session_state:
-        st.session_state.extraction_complete = False
-    if 'individual_results' not in st.session_state:
-        st.session_state.individual_results = []
-    
-    # Process button
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        start_btn = st.button(
-            "🚀 Start Extraction",
-            type="primary",
-            use_container_width=True,
-            disabled=not uploaded_files
-        )
-    
-    # Processing logic with DYNAMIC PROGRESS BAR
-    if start_btn and uploaded_files:
-        st.session_state.extraction_complete = False
-        st.session_state.results_df = None
-        st.session_state.individual_results = []  # Store individual results
-        
-        st.markdown("---")
-        st.markdown("### ⏳ Processing Files...")
-        
-        # Progress bar
-        progress_bar = st.progress(0)
-        
-        # Status text
-        status_placeholder = st.empty()
-        
-        results = []
-        individual_results = []  # List of (filename, series, data_dict)
-        total = len(uploaded_files)
-        
-        for i, uploaded_file in enumerate(uploaded_files):
-            current = i + 1
-            
-            # Update status text with filename and count
-            status_placeholder.markdown(
-                f'<div class="processing-status">'
-                f'📄 Processing file <strong>{uploaded_file.name}</strong> ({current} of {total})...'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-            
-            # Save to temp file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-                tmp.write(uploaded_file.getvalue())
-                tmp_path = tmp.name
-            
-            try:
-                data = parse_pdf(tmp_path, uploaded_file.name)
-                results.append(data)
-                # Store individual result with filename and product type
-                individual_results.append({
-                    'filename': uploaded_file.name,
-                    'series': data.get('SERIES', 'Unknown'),
-                    'product_type': data.get('_PRODUCT_TYPE', 'Unknown'),
-                    'data': data
-                })
-            finally:
-                os.unlink(tmp_path)
-            
-            # Update progress bar
-            progress_bar.progress(current / total)
-        
-        # Clear status
-        status_placeholder.empty()
-        
-        # Create DataFrame - handle different column structures
-        df = pd.DataFrame(results)
-        
-        # Remove internal columns from display
-        display_cols = [col for col in df.columns if not col.startswith('_')]
-        df_display = df[display_cols]
-        
-        # Reorder columns: SERIES first, then alphabetically
-        if 'SERIES' in df_display.columns:
-            other_cols = sorted([c for c in df_display.columns if c != 'SERIES'])
-            df_display = df_display[['SERIES'] + other_cols]
-        
-        st.session_state.results_df = df_display
-        st.session_state.individual_results = individual_results
-        st.session_state.extraction_complete = True
-        
-        # Count product types
-        product_types = df['_PRODUCT_TYPE'].value_counts().to_dict() if '_PRODUCT_TYPE' in df.columns else {}
-        type_summary = ", ".join([f"{count} {ptype}" for ptype, count in product_types.items()])
-        
-        # Success
-        progress_bar.progress(1.0)
-        st.markdown(
-            '<div class="success-banner">'
-            '<h3 style="color: #059669; margin: 0;">✅ Extraction Complete! 🚀</h3>'
-            f'<p style="color: #047857; margin: 0.5rem 0 0 0;">Successfully extracted data from {len(results)} file(s)</p>'
-            f'<p style="color: #047857; margin: 0.25rem 0 0 0;"><em>Product types: {type_summary}</em></p>'
-            '</div>',
-            unsafe_allow_html=True
-        )
-    
-    # Step 3 & 4: Results and Download
-    if st.session_state.extraction_complete and st.session_state.results_df is not None:
-        st.markdown("---")
-        st.markdown('<span class="step-badge">Step 3</span> **Results Preview**', unsafe_allow_html=True)
-        
-        # Calculate overall coverage
-        df = st.session_state.results_df
-        individual_results = st.session_state.individual_results
-        
-        non_na_total = (df != 'N/A').sum().sum()
-        total_cells = df.size
-        overall_pct = int((non_na_total / total_cells) * 100) if total_cells > 0 else 0
-        num_cols = len(df.columns)
-        
-        # Overall Metrics
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.metric("📄 Files", len(df))
-        with c2:
-            st.metric("📊 Columns", num_cols)
-        with c3:
-            st.metric("✅ Overall Coverage", f"{overall_pct}%")
-        with c4:
-            # Count unique series
-            series_count = len(set(r.get('series', 'Unknown') for r in individual_results))
-            st.metric("🏷️ Series", series_count)
-        
-        # Per-File Coverage Details
-        if len(individual_results) > 1:
-            st.markdown("##### 📊 Per-File Coverage")
-            
-            for idx, result in enumerate(individual_results):
-                filename = result['filename']
-                series = result['series']
-                product_type = result.get('product_type', 'Unknown')
-                data = result['data']
-                
-                # Calculate coverage for this file
-                fields = {k: v for k, v in data.items() if not k.startswith('_')}
-                found_fields = [k for k, v in fields.items() if v != 'N/A']
-                missing_fields = [k for k, v in fields.items() if v == 'N/A']
-                file_coverage = int((len(found_fields) / len(fields)) * 100) if fields else 0
-                
-                # Get product type description
-                type_key = None
-                for key, value in PRODUCT_TYPES.items():
-                    if product_type in str(value) or product_type.lower().replace(' ', '_') == key:
-                        type_key = key
-                        break
-                type_description = PRODUCT_TYPES.get(type_key, {}).get('description', product_type) if type_key else product_type
-                
-                # Display with expander for details
-                conf_score = data.get('_confidence_score', 0)
-                conf_level = data.get('_confidence_level', 'low')
-                conf_icon = get_confidence_icon(conf_level)
-                
-                with st.expander(f"📄 **{series}** ({product_type}) - Coverage: {file_coverage}% | Confidence: {conf_icon} {conf_score}%", expanded=False):
-                    # Show product specification
-                    st.info(f"📋 **Specification:** {type_description}")
-                    
-                    # Progress bar
-                    st.progress(file_coverage / 100)
-                    
-                    # Validation Details Section
-                    validation = data.get('_validation', {})
-                    if validation:
-                        st.markdown("---")
-                        st.markdown("##### 🔍 Validation Details")
-                        
-                        # Create validation table
-                        for field in sorted(validation.keys()):
-                            meta = validation[field]
-                            icon = meta.get('icon', '⚪')
-                            reason = meta.get('reason', 'Unknown')
-                            source = meta.get('source', 'N/A')
-                            page = meta.get('page')
-                            page_str = f"Page {page}" if page else "—"
-                            
-                            st.markdown(
-                                f"{icon} **{field}**: {reason} | Source: {source} | {page_str}"
-                            )
-                    
-                    st.markdown("---")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown("**✅ Found fields:**")
-                        if found_fields:
-                            for field in sorted(found_fields):
-                                st.markdown(f"- {field}")
-                        else:
-                            st.markdown("_None_")
-                    
-                    with col2:
-                        st.markdown("**❌ Missing fields:**")
-                        if missing_fields:
-                            for field in sorted(missing_fields):
-                                st.markdown(f"- {field}")
-                        else:
-                            st.markdown("_None - Full coverage!_")
-        
-        elif len(individual_results) == 1:
-            # Single file - show inline coverage
-            result = individual_results[0]
-            data = result['data']
-            fields = {k: v for k, v in data.items() if not k.startswith('_')}
-            found_fields = [k for k, v in fields.items() if v != 'N/A']
-            missing_fields = [k for k, v in fields.items() if v == 'N/A']
-            
-            st.markdown("##### 📊 Field Coverage")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"**✅ Found ({len(found_fields)}):** " + ", ".join(sorted(found_fields)) if found_fields else "_None_")
-            with col2:
-                st.markdown(f"**❌ Missing ({len(missing_fields)}):** " + ", ".join(sorted(missing_fields)) if missing_fields else "_Full coverage!_")
-        
-        # Legend for field values
-        st.markdown("##### 📋 Extracted Data")
-        st.markdown(
-            '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">'
-            '<strong>📖 Legend:</strong><br>'
-            '<span style="background-color: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-weight: bold;">N/A</span> '
-            '= Value expected but not found in the PDF (missing data)<br>'
-            '<span style="color: #6b7280;">—</span> '
-            '= Field not applicable for this product type<br><br>'
-            '<strong>🔍 Confidence Levels:</strong><br>'
-            '🟢 <strong>High</strong> = Multiple options found with proper Code:Value format<br>'
-            '🟡 <strong>Medium</strong> = Value found but single option or incomplete format<br>'
-            '🔴 <strong>Low</strong> = Value not found or uncertain extraction'
-            '</div>',
-            unsafe_allow_html=True
-        )
-        
-        # Style function to highlight N/A cells in red
-        def highlight_na(val):
-            if val == 'N/A':
-                return 'background-color: #fee2e2; color: #dc2626; font-weight: bold;'
-            return ''
-        
-        styled_df = df.style.applymap(highlight_na)
-        st.dataframe(styled_df, use_container_width=True, height=300)
-        
-        st.markdown("---")
-        
-        # Step 4: Download Options
-        st.markdown('<span class="step-badge">Step 4</span> **Download Results**', unsafe_allow_html=True)
-        
-        # Combined Download
-        st.markdown("##### 📦 Download All (Combined)")
-        output_all = io.BytesIO()
-        with pd.ExcelWriter(output_all, engine='openpyxl') as writer:
-            st.session_state.results_df.to_excel(writer, index=False, sheet_name='All Extracted Data')
-            # Apply red styling to N/A cells
-            ws = writer.sheets['All Extracted Data']
-            red_fill = PatternFill(start_color='FEE2E2', end_color='FEE2E2', fill_type='solid')
-            red_font = Font(color='DC2626', bold=True)
-            for row in ws.iter_rows(min_row=2):  # Skip header
-                for cell in row:
-                    if cell.value == 'N/A':
-                        cell.fill = red_fill
-                        cell.font = red_font
-        output_all.seek(0)
-        
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.download_button(
-                label="Download All - ScrAPEM_Output.xlsx",
-                data=output_all,
-                file_name="ScrAPEM_Output.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
-                key="download_all"
-            )
-        
-        # Individual Downloads
-        if len(st.session_state.individual_results) > 1:
-            st.markdown("---")
-            st.markdown("##### 📄 Download Individual Files (by Series)")
-            
-            # Create columns for download buttons (3 per row)
-            individual_results = st.session_state.individual_results
-            cols_per_row = 3
-            
-            for i in range(0, len(individual_results), cols_per_row):
-                cols = st.columns(cols_per_row)
-                for j, col in enumerate(cols):
-                    idx = i + j
-                    if idx < len(individual_results):
-                        result = individual_results[idx]
-                        series_name = result['series']
-                        filename = result['filename']
-                        data = result['data']
-                        
-                        # Create individual Excel file with dynamic columns
-                        individual_output = io.BytesIO()
-                        individual_df = pd.DataFrame([data])
-                        
-                        # Remove internal columns and order dynamically
-                        display_cols = [col for col in individual_df.columns if not col.startswith('_')]
-                        if 'SERIES' in display_cols:
-                            other_cols = sorted([c for c in display_cols if c != 'SERIES'])
-                            display_cols = ['SERIES'] + other_cols
-                        individual_df = individual_df[display_cols]
-                        
-                        with pd.ExcelWriter(individual_output, engine='openpyxl') as writer:
-                            individual_df.to_excel(writer, index=False, sheet_name=series_name[:31])
-                            # Apply red styling to N/A cells
-                            ws = writer.sheets[series_name[:31]]
-                            red_fill = PatternFill(start_color='FEE2E2', end_color='FEE2E2', fill_type='solid')
-                            red_font = Font(color='DC2626', bold=True)
-                            for row in ws.iter_rows(min_row=2):
-                                for cell in row:
-                                    if cell.value == 'N/A':
-                                        cell.fill = red_fill
-                                        cell.font = red_font
-                        individual_output.seek(0)
-                        
-                        with col:
-                            st.download_button(
-                                label=f"📄 {series_name}",
-                                data=individual_output,
-                                file_name=f"{series_name}_Output.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True,
-                                key=f"download_{idx}"
-                            )
-    
-    # Footer
-    st.markdown("---")
-    st.caption("ScrAPEM - Intelligent Datasheet Extractor | Built with Streamlit")
+    except Exception as e:
+        return {
+            'SERIES': extract_series_from_filename(filename),
+            '_PRODUCT_TYPE': 'Unknown',
+            '_validation': {},
+            '_confidence_score': 0,
+            '_confidence_level': 'low',
+            'ERROR': str(e)
+        }
 
 
-if __name__ == "__main__":
-    main()
+def get_low_confidence_fields(result):
+    """
+    Get list of fields that need AI enhancement.
+    Returns fields with 'low' confidence or N/A values.
+    """
+    low_conf_fields = []
+    validation = result.get('_validation', {})
+    
+    for field, meta in validation.items():
+        if meta.get('confidence') == 'low' or meta.get('source') is None:
+            value = result.get(field, 'N/A')
+            low_conf_fields.append({
+                'field': field,
+                'current_value': value,
+                'reason': meta.get('reason', 'Unknown'),
+                'confidence': meta.get('confidence', 'low')
+            })
+    
+    return low_conf_fields
