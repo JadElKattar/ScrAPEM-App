@@ -19,8 +19,8 @@ def render_navbar(current_page="Home"):
             padding-top: 0.25rem !important;
         }
         
-        /* Button styling for nav */
-        .stButton > button {
+        /* Button styling for nav ONLY - scoped to navbar area */
+        .navbar-container .stButton > button {
             background: transparent !important;
             border: none !important;
             color: #374151 !important;
@@ -30,7 +30,7 @@ def render_navbar(current_page="Home"):
             border-radius: 6px !important;
         }
         
-        .stButton > button:hover {
+        .navbar-container .stButton > button:hover {
             color: #667eea !important;
             background: rgba(102, 126, 234, 0.1) !important;
         }

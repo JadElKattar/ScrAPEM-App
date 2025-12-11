@@ -1,6 +1,6 @@
 """
 ScrAPEM - Intelligent Datasheet Extractor
-Hybrid AI + Deterministic Python Extraction Pipeline (v5.5)
+Hybrid AI + Deterministic Python Extraction Pipeline (v6.0)
 """
 
 import streamlit as st
@@ -34,7 +34,7 @@ st.markdown("""
     /* Main styling */
     .main .block-container {
         padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding-bottom: 1rem;
     }
     
     /* Header styling */
@@ -107,18 +107,18 @@ st.markdown("""
     
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border: none !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
         transition: all 0.3s ease;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
     }
     
     /* Sidebar */
@@ -182,7 +182,7 @@ with st.sidebar:
 # --- MAIN CONTENT ---
 st.markdown("""
 <div class="main-header">
-    <h1>📄 ScrAPEM v5.5</h1>
+    <h1>📄 ScrAPEM v6.0</h1>
     <p>Intelligent Datasheet Extractor — Upload PDFs and extract product specifications automatically</p>
 </div>
 """, unsafe_allow_html=True)

@@ -101,52 +101,33 @@ st.markdown("## 👥 Development Team")
 # Team member cards CSS
 st.markdown("""
 <style>
-    .team-member-card {
-        background: #1a1a2e;
-        border-radius: 12px;
-        overflow: hidden;
-        text-align: center;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .team-member-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    
-    .team-member-photo {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
     .team-member-info {
-        padding: 1.25rem;
-        background: #1a1a2e;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 0 0 12px 12px;
+        text-align: center;
     }
     
     .team-member-name {
         color: white;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.25rem 0;
     }
     
     .team-member-role {
-        color: #a0a0a0;
-        font-size: 0.9rem;
+        color: rgba(255,255,255,0.85);
+        font-size: 0.85rem;
         font-weight: 500;
+        margin: 0;
     }
     
-    .placeholder-avatar {
-        width: 100%;
-        height: 250px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
+    /* Force consistent image height */
+    .team-photo-container img {
+        height: 280px !important;
+        width: 100% !important;
+        object-fit: cover !important;
+        border-radius: 12px 12px 0 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -154,16 +135,9 @@ st.markdown("""
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.image("assets/team_jad.png", use_container_width=True)
-    st.markdown("""
-    <div class="team-member-info">
-        <p class="team-member-name">Jad El Kattar</p>
-        <p class="team-member-role">AI & Data Engineer</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
+    st.markdown('<div class="team-photo-container">', unsafe_allow_html=True)
     st.image("assets/team_alessandro.jpg", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="team-member-info">
         <p class="team-member-name">Alessandro Vigano</p>
@@ -171,23 +145,25 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
+with col2:
+    st.markdown('<div class="team-photo-container">', unsafe_allow_html=True)
+    st.image("assets/team_jad.jpg", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="team-member-info">
+        <p class="team-member-name">Jad El Kattar</p>
+        <p class="team-member-role">AI & Data Engineer</p>
+    </div>
+    """, unsafe_allow_html=True)
+
 with col3:
-    st.image("assets/team_nikita.png", use_container_width=True)
+    st.markdown('<div class="team-photo-container">', unsafe_allow_html=True)
+    st.image("assets/team_nikita.jpg", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="team-member-info">
         <p class="team-member-name">Nikita Marushko</p>
         <p class="team-member-role">QA & Testing Lead</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# University info
-st.markdown("")
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.markdown("""
-    <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
-        <h4 style="margin: 0;">🎓 TBS Education | 2025-2026</h4>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Academic collaboration with APEM</p>
     </div>
     """, unsafe_allow_html=True)
 
